@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>休業日カレンダー</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #f9f9f9;
+      margin: 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    table {
+      margin: 0 auto;
+      border-collapse: collapse;
+    }
+    th, td {
+      width: 40px;
+      height: 40px;
+      border: 1px solid #ccc;
+      text-align: center;
+      vertical-align: middle;
+      cursor: pointer;
+    }
+    td.inactive {
+      background: #eee;
+      color: #aaa;
+      cursor: default;
+    }
+    td.holiday {
+      background: #ffc0cb;
+      font-weight: bold;
+      color: #900;
+    }
+    #saveBtn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="monthTitle"></h1>
+  <table id="calendar"></table>
+  <button id="saveBtn">保存する</button>
+
+  <script>
+    const calendar = document.getElementById("calendar");
+    const monthTitle = document.getElementById("monthTitle");
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const holidays = new Set();
+
+    function buildCalendar(y, m) {
+      calendar.innerHTML = "";
+      monthTitle.textContent = `${y}年${m + 1}月`;
+
+      const firstDay = new Date(y, m, 1);
+      const lastDay = new Date(y, m + 1, 0);
+      const startDay = firstDay.getDay();
+      const daysInMonth = lastDay.getDate();
+
+      const headerRow = document.createElement("tr");
+      ["日", "月", "火", "水", "木", "金", "土"].forEach(d => {
+        const th = document.createElement("th");
+        th.textContent = d;
+        headerRow.appendChild(th);
+      });
+      calendar.appendChild(headerRow);
+
+      let row = document.createElement("tr");
+      for (let i = 0; i < startDay; i++) {
+        const td = document.createElement("td");
+        td.classList.add("inactive");
+        row.appendChild(td);
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(y, m, d);
+        const td = document.createElement("td");
+        td.textContent = d;
+
+        const key = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+        td.addEventListener("click", () => {
+          if (td.classList.contains("holiday")) {
+            td.classList.remove("holiday");
+            holidays.delete(key);
+          } else {
+            td.classList.add("holiday");
+            holidays.add(key);
+          }
+        });
+
+        row.appendChild(td);
+
+        if (date.getDay() === 6) {
+          calendar.appendChild(row);
+          row = document.createElement("tr");
+        }
+      }
+
+      if (row.children.length > 0) calendar.appendChild(row);
+    }
+
+    buildCalendar(year, month);
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      const dates = Array.from(holidays);
+      if (dates.length === 0) {
+        alert("休業日が選択されていません。");
+        return;
+      }
+
+      fetch("https://script.google.com/macros/s/AKfycbwITPbl0WAQZoF_F19Beyi8L0SAFWROO8zUwKBqB_r0E7jo0h11gz5rMgMgF7oJFqY_/exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dates })
+      })
+      .then(res => res.text())
+      .then(msg => {
+        alert("送信完了！\n" + msg);
+        holidays.clear();
+        buildCalendar(year, month);
+      })
+      .catch(err => alert("送信エラー:\n" + err));
+    });
+  </script>
+</body>
+</html>
