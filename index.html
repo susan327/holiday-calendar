@@ -42,16 +42,16 @@
 
   <script>
     const holidays = new Set();
-
     const today = new Date();
     const year = today.getFullYear();
-    const month = today.getMonth(); // 0-index
+    const month = today.getMonth();
 
     function buildCalendar(y, m) {
       const firstDay = new Date(y, m, 1).getDay();
       const lastDate = new Date(y, m + 1, 0).getDate();
       const calendar = document.createElement("table");
       const header = document.createElement("tr");
+
       ["日", "月", "火", "水", "木", "金", "土"].forEach(day => {
         const th = document.createElement("th");
         th.textContent = day;
@@ -96,8 +96,7 @@
         return;
       }
 
-      fetch("fetch("https://script.google.com/macros/s/AKfycbwITPbl0WAQZoF_F19Beyi8L0SAFWROO8zUwKBqB_r0E7jo0h11gz5rMgMgF7oJFqY_/exec", {
-", {
+      fetch("https://script.google.com/macros/s/AKfycbwITPbl0WAQZoF_F19Beyi8L0SAFWROO8zUwKBqB_r0E7jo0h11gz5rMgMgF7oJFqY_/exec", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
